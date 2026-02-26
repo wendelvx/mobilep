@@ -1,5 +1,6 @@
 import React from 'react';
-import { StatusBar, StyleSheet, Text, View } from 'react-native';
+// ADICIONADO: Platform no import abaixo
+import { Platform, SafeAreaView, StatusBar, StyleSheet, Text, View } from 'react-native';
 import { BossIcon } from '../components/BossIcon';
 
 interface ResultViewProps {
@@ -12,123 +13,160 @@ export const ResultView = ({ status, gameState }: ResultViewProps) => {
   const bossName = gameState?.boss?.name || "O Inimigo";
   const bossId = gameState?.boss?.id || "tcc_titan";
 
+  // Cores dinâmicas para o tema de resultado
+  const themeColor = isVictory ? '#4CAF50' : '#ff4d4d';
+  const bgHighlight = isVictory ? 'rgba(76, 175, 80, 0.05)' : 'rgba(255, 77, 77, 0.05)';
+
   return (
-    <View style={[
+    <SafeAreaView style={[
       styles.container, 
-      { backgroundColor: isVictory ? '#051a05' : '#1a0505' } // Tons muito escuros para contraste
+      { backgroundColor: isVictory ? '#020a02' : '#0a0202' }
     ]}>
       <StatusBar barStyle="light-content" />
 
       <View style={styles.content}>
-        {/* Ícone do Boss com moldura de status */}
-        <View style={[
-          styles.iconCircle, 
-          { borderColor: isVictory ? '#4CAF50' : '#ff4d4d' }
-        ]}>
-          <BossIcon bossId={bossId} />
-        </View>
-
-        <Text style={[
-          styles.title, 
-          { color: isVictory ? '#4CAF50' : '#ff4d4d' }
-        ]}>
-          {isVictory ? "MISSÃO CUMPRIDA" : "SISTEMA CORROMPIDO"}
-        </Text>
-
-        <Text style={styles.bossLog}>
-          {isVictory 
-            ? `O ${bossName} foi refatorado com sucesso!` 
-            : `O ${bossName} derrubou a produção.`}
-        </Text>
-
-        <View style={styles.messageBox}>
-          <Text style={styles.subtitle}>
-            {isVictory 
-              ? "Parabéns! Seu desempenho e dano crítico foram registrados no Hall da Fama do PostgreSQL." 
-              : "O projeto virou código legado e o deploy falhou. Preparem o rollback para a próxima tentativa."}
+        {/* HEADER DE STATUS */}
+        <View style={styles.header}>
+          <Text style={styles.statusLabel}>STATUS_DA_REQUISICAO</Text>
+          <Text style={[styles.title, { color: themeColor }]}>
+            {isVictory ? "HTTP 200: OK" : "HTTP 500: ERROR"}
           </Text>
         </View>
 
-        {/* Indicador de Espera */}
+        {/* ÍCONE DO PROFESSOR (BOSS) */}
+        <View style={[styles.iconWrapper, { borderColor: themeColor }]}>
+          <BossIcon bossId={bossId} />
+          <View style={[styles.resultBadge, { backgroundColor: themeColor }]}>
+            <Text style={styles.resultBadgeText}>
+              {isVictory ? "REFATORADO" : "DEPRECADO"}
+            </Text>
+          </View>
+        </View>
+
+        {/* LOG DE RESULTADO */}
+        <View style={[styles.messageBox, { backgroundColor: bgHighlight, borderColor: themeColor + '30' }]}>
+          <Text style={[styles.mainMessage, { color: themeColor }]}>
+            {isVictory ? "MISSÃO CUMPRIDA" : "SISTEMA CORROMPIDO"}
+          </Text>
+          <Text style={styles.bossLog}>
+            {isVictory 
+              ? `O ${bossName} foi finalizado com sucesso. O deploy foi aceito pela banca!` 
+              : `O ${bossName} detectou erros críticos. O projeto entrou em looping infinito.`}
+          </Text>
+        </View>
+
+        <View style={styles.terminalContainer}>
+          <Text style={styles.terminalText}>
+            {isVictory 
+              ? "> Salvando logs no Postgres...\n> Gerando ranking de danos...\n> Sessão finalizada com sucesso." 
+              : "> Rollback iniciado...\n> Limpando cache do Redis...\n> Aguardando nova sprint."}
+          </Text>
+        </View>
+
+        {/* FOOTER DE ESPERA */}
         <View style={styles.footer}>
-          <View style={styles.pulseDot} />
-          <Text style={styles.waitText}>Aguardando comando do Mestre para Reset...</Text>
+          <View style={[styles.pulseDot, { backgroundColor: themeColor }]} />
+          <Text style={styles.waitText}>AGUARDANDO RESET DO MESTRE</Text>
         </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
   container: { 
     flex: 1, 
-    justifyContent: 'center', 
-    alignItems: 'center', 
-    padding: 30 
   },
   content: {
+    flex: 1,
     alignItems: 'center',
-    width: '100%'
+    justifyContent: 'space-around',
+    padding: 30 
   },
-  iconCircle: {
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    borderWidth: 4,
-    justifyContent: 'center',
+  header: {
     alignItems: 'center',
-    backgroundColor: '#000',
-    marginBottom: 20,
-    // Efeito de brilho (Glow)
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.8,
-    shadowRadius: 15,
-    elevation: 10
+  },
+  statusLabel: {
+    color: '#333',
+    fontSize: 10,
+    fontWeight: 'bold',
+    letterSpacing: 2,
+    marginBottom: 5
   },
   title: { 
-    fontSize: 28, 
+    fontSize: 32, 
     fontWeight: '900', 
     textAlign: 'center',
-    letterSpacing: 1,
-    textTransform: 'uppercase'
+    letterSpacing: -1
   },
-  bossLog: {
-    color: '#fff',
-    fontSize: 14,
-    marginTop: 10,
-    fontWeight: 'bold',
-    fontStyle: 'italic',
-    opacity: 0.8
+  iconWrapper: {
+    position: 'relative',
+    padding: 10,
+  },
+  resultBadge: {
+    position: 'absolute',
+    bottom: 5,
+    right: -10,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 5,
+    transform: [{ rotate: '5deg' }]
+  },
+  resultBadgeText: {
+    color: '#000',
+    fontSize: 10,
+    fontWeight: 'black',
   },
   messageBox: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    padding: 20,
-    borderRadius: 15,
-    marginTop: 30,
-    width: '100%'
+    width: '100%',
+    padding: 25,
+    borderRadius: 20,
+    borderWidth: 1,
+    alignItems: 'center'
   },
-  subtitle: { 
-    color: '#aaa', 
-    fontSize: 15, 
+  mainMessage: {
+    fontSize: 22,
+    fontWeight: '900',
+    marginBottom: 10,
+    letterSpacing: 1
+  },
+  bossLog: {
+    color: '#aaa',
+    fontSize: 14,
     textAlign: 'center',
-    lineHeight: 22
+    lineHeight: 20,
+    fontWeight: '500'
+  },
+  terminalContainer: {
+    width: '100%',
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    padding: 15,
+    borderRadius: 10,
+    borderLeftWidth: 3,
+    borderLeftColor: '#222'
+  },
+  terminalText: {
+    color: '#444',
+    // Platform agora está disponível aqui:
+    fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace', 
+    fontSize: 11,
+    lineHeight: 18
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 50
   },
   waitText: { 
-    color: '#666', 
-    fontSize: 12,
-    fontWeight: 'bold'
+    color: '#222', 
+    fontSize: 10,
+    fontWeight: 'bold',
+    letterSpacing: 1
   },
   pulseDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-    backgroundColor: '#444',
-    marginRight: 10
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 10,
+    opacity: 0.6
   }
 });

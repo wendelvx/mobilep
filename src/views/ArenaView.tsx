@@ -1,10 +1,18 @@
 import React from 'react';
-import { StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+// ADICIONADO: ActivityIndicator no import abaixo
+import {
+  ActivityIndicator,
+  SafeAreaView,
+  StatusBar,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View
+} from 'react-native';
 import { BossIcon } from '../components/BossIcon';
 import { HPBar } from '../components/HPBar';
 
 export const ArenaView = ({ gameState, playerClass, onAttack }: any) => {
-  // Desestruturação conforme o GameState V2.0 do Go
   const { boss, boss_hp, team_hp, max_team_hp, multiplier, active_incident } = gameState;
 
   const themes: any = {
@@ -18,85 +26,87 @@ export const ArenaView = ({ gameState, playerClass, onAttack }: any) => {
   const currentTheme = themes[playerClass] || { color: '#fff', label: 'ACTION' };
 
   return (
-    <View style={styles.battleContainer}>
+    <SafeAreaView style={styles.battleContainer}>
       <StatusBar barStyle="light-content" />
       
       <View style={styles.header}>
-        {/* Passamos o ID para o ícone mudar conforme o Boss selecionado */}
         <BossIcon bossId={boss.id} />
         <Text style={styles.bossTitle}>{boss.name}</Text>
         
-        {/* HP do Boss baseado no Perfil Dinâmico */}
-        <HPBar label="BOSS HP" current={boss_hp} max={boss.base_hp} color="#ff4d4d" />
-        
-        {/* Integridade da Turma */}
-        <HPBar label="INTEGRIDADE" current={team_hp} max={max_team_hp} color="#4CAF50" />
-        
+        <View style={styles.statusGroup}>
+          <HPBar label="INTEGRIDADE DO PROF" current={boss_hp} max={boss.base_hp} color="#ff4d4d" />
+          <HPBar label="SAÚDE DA TURMA" current={team_hp} max={max_team_hp} color="#4CAF50" />
+        </View>
+
         <View style={styles.multBadge}>
-          <Text style={styles.multLabel}>POTÊNCIA: {multiplier.toFixed(2)}x</Text>
+          <Text style={styles.multLabel}>POWER MULTIPLIER: {multiplier.toFixed(2)}x</Text>
         </View>
       </View>
 
       <View style={styles.actionArea}>
         {active_incident?.id ? (
-          <IncidentUI incident={active_incident} playerClass={playerClass} onAttack={onAttack} />
+          <IncidentUI 
+            incident={active_incident} 
+            playerClass={playerClass} 
+            onAttack={onAttack} 
+          />
         ) : (
           <TouchableOpacity 
             activeOpacity={0.7} 
             style={[styles.attackCircle, { borderColor: currentTheme.color }]} 
             onPress={() => onAttack()}
           >
-            <Text style={[styles.attackText, { color: currentTheme.color }]}>{currentTheme.label}</Text>
+            <View style={[styles.innerCircle, { backgroundColor: currentTheme.color + '10' }]}>
+              <Text style={[styles.attackText, { color: currentTheme.color }]}>{currentTheme.label}</Text>
+            </View>
           </TouchableOpacity>
         )}
       </View>
 
       <View style={styles.footer}>
-        <Text style={styles.playerInfo}>
-          {playerClass.toUpperCase()} • SESSÃO ATIVA
-        </Text>
+        <View style={styles.classBadge}>
+          <Text style={styles.playerInfo}>
+             MODO: {playerClass.toUpperCase()}
+          </Text>
+        </View>
       </View>
-    </View>
+    </SafeAreaView>
   );
 };
 
 const IncidentUI = ({ incident, playerClass, onAttack }: any) => {
-  // Lógica de progresso da Cota (V2.0)
   const progress = Math.min(100, (incident.current_clicks / incident.target_quota) * 100);
-  
-  // Verifica se a classe do aluno é a necessária para este incidente
   const isRequiredClass = incident.required_class === "All" || incident.required_class === playerClass;
 
   const incidentConfigs: any = {
-    error_500: { title: "SERVER CRASH", sub: "Erro 500 detectado!", btn: "🚀 RE-DEPLOY", color: "#fff" },
-    code_review: { title: "CODE REVIEW", sub: "Clique devagar (800ms)!", btn: "📝 ANALISAR", color: "#FFEB3B" },
-    phishing: { title: "S.O.C. ALERT", sub: "Tentativa de Phishing!", btn: "🛡️ FIREWALL", color: "#9C27B0" },
-    legacy_code_spill: { title: "LEGACY SPILL", sub: "Código antigo vazando!", btn: "🛠️ REFACTOR", color: "#3776AB" },
-    database_lock: { title: "DB LOCKED", sub: "Deadlock no banco!", btn: "🔓 UNLOCK", color: "#3498db" },
+    error_500: { title: "SERVER CRASH", sub: "Apenas DevOps podem agir!", btn: "🚀 RE-DEPLOY", color: "#fff" },
+    code_review: { title: "CODE REVIEW", sub: "Clique no ritmo (800ms)!", btn: "📝 ANALISAR", color: "#FFEB3B" },
+    phishing: { title: "S.O.C. ALERT", sub: "Cuidado com o link falso!", btn: "🛡️ FIREWALL", color: "#9C27B0" },
+    legacy_code_spill: { title: "LEGACY SPILL", sub: "Refatore o código antigo!", btn: "🛠️ REFACTOR", color: "#3776AB" },
+    database_lock: { title: "DB LOCKED", sub: "Limpe as queries travadas!", btn: "🔓 UNLOCK", color: "#3498db" },
   };
 
-  const config = incidentConfigs[incident.id] || { title: "INCIDENTE", sub: "Resolva!", btn: "AGIR", color: "#ff4d4d" };
+  const config = incidentConfigs[incident.id] || { title: "INCIDENTE", sub: "Ação necessária!", btn: "AGIR", color: "#ff4d4d" };
 
   return (
-    <View style={styles.incidentBox}>
+    <View style={[styles.incidentBox, { borderColor: config.color + '50' }]}>
       <Text style={[styles.errorTitle, { color: config.color }]}>{config.title}</Text>
       
-      {/* BARRA DE PROGRESSO DO INCIDENTE */}
       <View style={styles.incidentProgressContainer}>
         <View style={[styles.incidentProgressBar, { width: `${progress}%`, backgroundColor: config.color }]} />
       </View>
-      <Text style={styles.quotaText}>{incident.current_clicks} / {incident.target_quota} CLIQUES</Text>
+      <Text style={styles.quotaText}>{incident.current_clicks} / {incident.target_quota} RESOLUÇÕES</Text>
 
-      <Text style={styles.errorSubtitle}>{isRequiredClass ? config.sub : `Aguardando ${incident.required_class}...`}</Text>
+      <Text style={styles.errorSubtitle}>
+        {isRequiredClass ? config.sub : `BLOQUEADO: Esperando ${incident.required_class}...`}
+      </Text>
 
-      {/* Botão de Phishing (Trap) */}
       {incident.id === "phishing" && (
         <TouchableOpacity style={styles.fakeButton} onPress={() => onAttack(true)}>
-          <Text style={styles.fakeButtonText}>🎁 XP GRÁTIS AQUI!</Text>
+          <Text style={styles.fakeButtonText}>⚡ GANHAR XP BÔNUS AQUI!</Text>
         </TouchableOpacity>
       )}
 
-      {/* Só mostra o botão de ação se for a classe correta */}
       {isRequiredClass ? (
         <TouchableOpacity 
           style={[styles.specialButton, { backgroundColor: config.color }]} 
@@ -106,7 +116,8 @@ const IncidentUI = ({ incident, playerClass, onAttack }: any) => {
         </TouchableOpacity>
       ) : (
         <View style={styles.disabledButton}>
-          <Text style={styles.disabledText}>BLOQUEADO</Text>
+          <ActivityIndicator size="small" color="#444" style={{ marginBottom: 5 }} />
+          <Text style={styles.disabledText}>AGUARDANDO SQUAD</Text>
         </View>
       )}
     </View>
@@ -114,32 +125,35 @@ const IncidentUI = ({ incident, playerClass, onAttack }: any) => {
 };
 
 const styles = StyleSheet.create({
-  battleContainer: { flex: 1, backgroundColor: '#0a0a0a', justifyContent: 'space-around', alignItems: 'center', padding: 20 },
-  header: { alignItems: 'center', width: '100%' },
-  bossTitle: { color: '#fff', fontSize: 18, fontWeight: 'bold', marginBottom: 15, textTransform: 'uppercase', letterSpacing: 2 },
-  multBadge: { backgroundColor: '#333', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, marginTop: 10 },
-  multLabel: { color: '#FFEB3B', fontSize: 10, fontWeight: 'bold' },
-  actionArea: { width: '100%', alignItems: 'center', height: 300, justifyContent: 'center' },
-  attackCircle: { width: 180, height: 180, borderRadius: 90, backgroundColor: '#111', justifyContent: 'center', alignItems: 'center', borderWidth: 6 },
-  attackText: { fontSize: 16, fontWeight: 'bold', textAlign: 'center', paddingHorizontal: 10 },
+  battleContainer: { flex: 1, backgroundColor: '#050505', justifyContent: 'space-between', alignItems: 'center' },
+  header: { alignItems: 'center', width: '100%', paddingTop: 20 },
+  bossTitle: { color: '#fff', fontSize: 20, fontWeight: '900', marginBottom: 20, textTransform: 'uppercase', letterSpacing: 2 },
+  statusGroup: { width: '100%', paddingHorizontal: 20 },
+  multBadge: { backgroundColor: '#111', paddingHorizontal: 15, paddingVertical: 6, borderRadius: 20, marginTop: 10, borderWidth: 1, borderColor: '#333' },
+  multLabel: { color: '#FFEB3B', fontSize: 10, fontWeight: 'bold', letterSpacing: 1 },
   
-  // Incident Styles
-  incidentBox: { alignItems: 'center', width: '100%', backgroundColor: '#151515', padding: 20, borderRadius: 20, borderWidth: 1, borderColor: '#333' },
-  errorTitle: { fontSize: 28, fontWeight: 'black', letterSpacing: -1 },
-  incidentProgressContainer: { width: '100%', height: 8, backgroundColor: '#000', borderRadius: 4, marginTop: 15, overflow: 'hidden' },
+  actionArea: { width: '100%', alignItems: 'center', height: 320, justifyContent: 'center' },
+  attackCircle: { width: 200, height: 200, borderRadius: 100, backgroundColor: '#000', justifyContent: 'center', alignItems: 'center', borderWidth: 8 },
+  innerCircle: { width: '100%', height: '100%', borderRadius: 100, justifyContent: 'center', alignItems: 'center' },
+  attackText: { fontSize: 18, fontWeight: '900', textAlign: 'center' },
+  
+  incidentBox: { alignItems: 'center', width: '90%', backgroundColor: '#0a0a0a', padding: 25, borderRadius: 30, borderWidth: 2 },
+  errorTitle: { fontSize: 32, fontWeight: '900', fontStyle: 'italic' },
+  incidentProgressContainer: { width: '100%', height: 10, backgroundColor: '#1a1a1a', borderRadius: 5, marginTop: 15, overflow: 'hidden' },
   incidentProgressBar: { height: '100%' },
-  quotaText: { color: '#666', fontSize: 10, marginTop: 5, fontWeight: 'bold' },
-  errorSubtitle: { color: '#aaa', fontSize: 14, textAlign: 'center', marginVertical: 15 },
+  quotaText: { color: '#444', fontSize: 11, marginTop: 8, fontWeight: 'bold' },
+  errorSubtitle: { color: '#888', fontSize: 13, textAlign: 'center', marginVertical: 15, fontWeight: '600' },
   
-  specialButton: { padding: 18, borderRadius: 12, width: '100%', alignItems: 'center' },
-  specialText: { color: '#000', fontSize: 16, fontWeight: 'bold' },
+  specialButton: { padding: 20, borderRadius: 15, width: '100%', alignItems: 'center', shadowColor: '#000', shadowOpacity: 0.5, shadowRadius: 10, elevation: 5 },
+  specialText: { color: '#000', fontSize: 18, fontWeight: 'bold' },
   
-  disabledButton: { padding: 18, borderRadius: 12, width: '100%', alignItems: 'center', backgroundColor: '#222' },
-  disabledText: { color: '#444', fontSize: 16, fontWeight: 'bold' },
+  disabledButton: { padding: 20, borderRadius: 15, width: '100%', alignItems: 'center', backgroundColor: '#111', borderWidth: 1, borderColor: '#222' },
+  disabledText: { color: '#333', fontSize: 14, fontWeight: 'bold' },
   
-  fakeButton: { backgroundColor: '#ffcc00', padding: 12, borderRadius: 10, width: '100%', marginBottom: 10, alignItems: 'center' },
-  fakeButtonText: { color: '#000', fontWeight: 'bold', fontSize: 12 },
+  fakeButton: { backgroundColor: '#FFD700', padding: 12, borderRadius: 10, width: '100%', marginBottom: 15, alignItems: 'center' },
+  fakeButtonText: { color: '#000', fontWeight: '800', fontSize: 12 },
   
-  footer: { borderTopWidth: 1, borderTopColor: '#222', width: '100%', alignItems: 'center', paddingTop: 15 },
-  playerInfo: { color: '#444', fontSize: 10, letterSpacing: 1 }
+  footer: { width: '100%', alignItems: 'center', paddingBottom: 30 },
+  classBadge: { borderBottomWidth: 2, borderBottomColor: '#333', paddingBottom: 5 },
+  playerInfo: { color: '#333', fontSize: 12, fontWeight: 'bold', letterSpacing: 2 }
 });

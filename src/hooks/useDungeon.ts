@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { io, Socket } from 'socket.io-client';
 
 // Dica: Em produção, você pode mover isso para um arquivo .env
-const SERVER_URL = 'https://mba-enrolled-obituaries-authorized.trycloudflare.com';
+const SERVER_URL = 'https://cadillac-tribe-orlando-bolt.trycloudflare.com';
 
 export const useDungeon = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
