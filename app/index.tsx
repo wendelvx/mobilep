@@ -7,31 +7,35 @@ import { ResultView } from '../src/views/ResultView';
 import { SelectionView } from '../src/views/SelectionView';
 
 export default function GameScreen() {
-  // Consome toda a inteligência do Hook modular que criamos
-  const { gameState, playerClass, selectClass, handleAction } = useDungeon();
+  // Agora desestruturamos o 'nickname' que vem do hook para usar no Lobby e Resultados
+  const { gameState, playerClass, nickname, selectClass, handleAction } = useDungeon();
 
-  // 1. Fase de Seleção: Se o aluno ainda não escolheu uma classe
+  // 1. FASE DE SELEÇÃO
+  // Se não houver classe, o aluno precisa se identificar e escolher o papel.
   if (!playerClass) {
     return <SelectionView onSelect={selectClass} />;
   }
 
-  // 2. Fase de Conexão: Se a classe foi escolhida, mas o servidor ainda não respondeu
+  // 2. FASE DE CONEXÃO/SINCRONIA
+  // Se a classe foi escolhida mas o pacote do Redis ainda não chegou, mostramos o loading.
   if (!gameState) {
     return (
       <View style={styles.loadingContainer}>
         <ActivityIndicator size="large" color="#2496ED" />
-        <Text style={styles.loadingText}>Sincronizando com o Reino...</Text>
+        <Text style={styles.loadingText}>SINCROZINANDO COM A ARENA...</Text>
       </View>
     );
   }
 
-  // 3. Máquina de Estados: Renderiza a View correta baseada no status vindo do Go
+  // 3. MÁQUINA DE ESTADOS (STATE MACHINE)
+  // Renderiza a View baseada no 'status' processado pela Engine em Go.
   switch (gameState.status) {
     case 'WAITING':
       return (
         <LobbyView 
           gameState={gameState} 
           playerClass={playerClass} 
+          nickname={nickname} // Novo: Passamos o nome para o Lobby
         />
       );
 
@@ -46,10 +50,15 @@ export default function GameScreen() {
 
     case 'VICTORY':
     case 'GAMEOVER':
-      return <ResultView status={gameState.status} />;
+      return (
+        <ResultView 
+          status={gameState.status} 
+          gameState={gameState} // Novo: Passamos o estado para mostrar o nome do Boss derrotado/vitorioso
+        />
+      );
 
     default:
-      // Fallback de segurança para voltar à seleção se algo bugar
+      // Fallback: se o status for desconhecido, volta para a seleção por segurança
       return <SelectionView onSelect={selectClass} />;
   }
 }
@@ -62,10 +71,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   loadingText: {
-    color: '#fff',
+    color: '#444',
     marginTop: 20,
-    fontSize: 16,
+    fontSize: 12,
     fontWeight: 'bold',
-    letterSpacing: 1.2,
+    letterSpacing: 2,
+    textTransform: 'uppercase'
   },
 });
